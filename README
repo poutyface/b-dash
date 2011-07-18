@@ -1,0 +1,7 @@
+Write job command to "Dashfile".
+
+> ./b-dash [N]
+N : Specify the number of process to run. (default: 5) 
+
+
+

@@ -1,0 +1,59 @@
+#/usr/bin/env bash
+
+set -m 
+
+dashfile='Dashfile'
+QUEUE=()
+limit=5
+
+enqueue (){
+    QUEUE=("${QUEUE[@]}" $1)
+    #echo "enqueue: ${QUEUE[@]}"
+}
+
+
+dequeue (){
+    OLDQUEUE=${QUEUE[@]}
+    QUEUE=()
+    for id in ${OLDQUEUE[@]}; do
+        if [ ! "$id" = "$1" ]; then
+            QUEUE=("${QUEUE[@]}" $id)
+        fi
+    done
+    #echo "dequeue: ${QUEUE[@]}"
+}
+
+
+checkworkers (){
+    OLDQUEUE=${QUEUE[@]}
+    #echo "checkworkers: ${QUEUE[@]}"
+    for id in ${OLDQUEUE[@]}; do
+        if ! ps $id > /dev/null ; then
+            dequeue $id
+        fi
+    done
+}
+
+
+if [ -n "$1" ]; then
+    limit=$1 
+fi
+
+while read line; do
+    if [ -z "$line" ]; then continue; fi
+
+    while [ "${#QUEUE[@]}" -gt $(($limit-1)) ]; do 
+        sleep 1; checkworkers; continue;
+    done
+
+    $line&
+    enqueue $!
+    echo "$(date +%T) | started with pid ${!}: ${line}"
+done < $dashfile
+
+
+for id in ${QUEUE[@]}; do 
+    wait $id
+done
+
+echo "... finished"
