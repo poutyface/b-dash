@@ -3,8 +3,20 @@
 set -m 
 
 dashfile='Dashfile'
-QUEUE=()
 limit=5
+QUEUE=()
+
+stopworkers (){
+    for id in ${QUEUE[@]}; do
+        if ps $id > /dev/null ; then
+            kill -TERM $id
+            echo "stop pid $id"
+        fi
+    done
+    exit 1
+}
+
+trap 'stopworkers' INT
 
 enqueue (){
     QUEUE=("${QUEUE[@]}" $1)
@@ -44,14 +56,13 @@ while read line; do
     if echo "$line" | grep "^\s*\#" ; then continue; fi
 
     while [ "${#QUEUE[@]}" -gt $(($limit-1)) ]; do 
-        sleep 1; checkworkers; continue;
+        checkworkers; continue;
     done
 
-    $line&
+    $line &
     enqueue $!
     echo "$(date +%T) | started with pid ${!}: ${line}"
 done < $dashfile
-
 
 for id in ${QUEUE[@]}; do 
     wait $id
