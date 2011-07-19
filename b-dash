@@ -41,6 +41,7 @@ fi
 
 while read line; do
     if [ -z "$line" ]; then continue; fi
+    if echo "$line" | grep "^\s*\#" ; then continue; fi
 
     while [ "${#QUEUE[@]}" -gt $(($limit-1)) ]; do 
         sleep 1; checkworkers; continue;
