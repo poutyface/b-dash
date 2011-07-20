@@ -47,9 +47,7 @@ checkworkers() {
 }
 
 
-if [ -n $1 ]; then
-    limit=$1 
-fi
+[[ -n $1 ]] && limit=$1
 
 while read line; do
     [[ -z "$line" ]] && continue
