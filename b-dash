@@ -6,7 +6,7 @@ dashfile='Dashfile'
 limit=5
 QUEUE=()
 
-stopworkers (){
+stopworkers() {
     for id in ${QUEUE[@]}; do
         if ps $id > /dev/null ; then
             kill -TERM $id
@@ -18,17 +18,17 @@ stopworkers (){
 
 trap 'stopworkers' INT
 
-enqueue (){
+enqueue() {
     QUEUE=("${QUEUE[@]}" $1)
     #echo "enqueue: ${QUEUE[@]}"
 }
 
 
-dequeue (){
+dequeue() {
     OLDQUEUE=${QUEUE[@]}
     QUEUE=()
     for id in ${OLDQUEUE[@]}; do
-        if [ ! "$id" = "$1" ]; then
+        if [ ! $id -eq $1 ]; then
             QUEUE=("${QUEUE[@]}" $id)
         fi
     done
@@ -36,7 +36,7 @@ dequeue (){
 }
 
 
-checkworkers (){
+checkworkers() {
     OLDQUEUE=${QUEUE[@]}
     #echo "checkworkers: ${QUEUE[@]}"
     for id in ${OLDQUEUE[@]}; do
@@ -47,21 +47,21 @@ checkworkers (){
 }
 
 
-if [ -n "$1" ]; then
+if [ -n $1 ]; then
     limit=$1 
 fi
 
 while read line; do
-    if [ -z "$line" ]; then continue; fi
-    if echo "$line" | grep "^\s*\#" ; then continue; fi
+    [[ -z "$line" ]] && continue
+    echo "$line" | grep "^\s*\#" > /dev/null && continue
 
-    while [ "${#QUEUE[@]}" -gt $(($limit-1)) ]; do 
+    while [ ${#QUEUE[@]} -ge $limit ]; do 
         checkworkers; continue;
     done
 
     $line &
     enqueue $!
-    echo "$(date +%T) | started with pid ${!}: ${line}"
+    echo "$(date +%T) | started with pid $!: $line"
 done < $dashfile
 
 for id in ${QUEUE[@]}; do 
